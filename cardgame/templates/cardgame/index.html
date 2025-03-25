@@ -1,3 +1,48 @@
 <h1>ELEMENTOS</h1>
+<ul>
+{% if not register_toggle %}
+    <p>Login</p>
 
-<p>Bem Vindo</p>
+    {% if error %}
+        <p>{{ error }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Username">
+        <input type="password" name="password" placeholder="Password">
+        <button type="submit" name="login">LOGIN</button>
+    </form>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="register">REGISTER</button>
+    </form>
+{% else %}
+    <p>Register</p>
+
+    {% if error %}
+        <p>{{ error }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Usuário">
+        <input type="password" name="password" placeholder="Senha">
+        <input type="password" name="password_confirmation" placeholder="Confirme a Senha">
+        <button type="submit" name="register_submit">REGISTER</button>
+    </form>
+{% endif %}
+</ul>
+
+<style>
+    p {
+        color: red;
+        text-align: center;
+    }
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    input {
+        margin: 10px;
+    }
+</style>

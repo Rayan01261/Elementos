@@ -1,8 +1,9 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
-class Jogador(models.Model):
-    nome = models.CharField(max_length=100)
+class Jogador(AbstractUser):
     vitorias = models.SmallIntegerField(default=0)
+
 
 class Partida(models.Model):
     jogador1 = models.ForeignKey(
@@ -18,7 +19,7 @@ class Carta(models.Model):
     numero = models.SmallIntegerField()
 
 class Baralho(models.Model):
-    partida = models.ForeignKey(Partida, on_delete=models.CASCADE)
+    partida = models.ForeignKey(Partida, on_delete=models.CASCADE, default=None)
     cartas = models.ManyToManyField(Carta)
 
 class Jogada(models.Model):

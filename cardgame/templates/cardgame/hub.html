@@ -1,0 +1,18 @@
+<h1>Bem Vindo</h1>
+
+
+<script type="text/javascript">
+    let url = 'ws://${window.location.host}ws/socket-server/'
+
+    const chatSocket = new WebSocket(url);
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        console.log('Data: ',data);
+    }
+</script>
+<style>
+    h1 {
+        text-align: center;
+    }
+</style>
