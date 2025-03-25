@@ -1,18 +1,66 @@
-<h1>Bem Vindo</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Lobby</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
 
+</head>
+<body>
+    <h1 class="title">ELEMENTOS</h1>
 
-<script type="text/javascript">
-    let url = 'ws://${window.location.host}ws/socket-server/'
+    
+    <div class="message">
+        <div id="messages"></div>
+    </div>
+    <form id="form">
+        <input type="button" value="1 De Fogo" onclick="sendMessage('1 De Fogo')"/>
+        <input type="button" value="2 de agua" onclick="sendMessage('2 de agua')"/>
+        <input type="button" value="3 de gelo" onclick="sendMessage('3 de gelo')"/>
+        <input type="button" value="666 de fogo" onclick="sendMessage('666 de fogo')"/>
+        <input type="button" value="3 de neve" onclick="sendMessage('3 de neve')"/>
+    </form>
+    <script type="text/javascript">
+        let url = `ws://${window.location.host}/ws/socket-server/`
 
-    const chatSocket = new WebSocket(url);
+        const chatSocket = new WebSocket(url)
 
-    chatSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        console.log('Data: ',data);
-    }
-</script>
+        chatSocket.onmessage = function(e){
+            let data = JSON.parse(e.data)
+            console.log('Data:', data)
+
+            if(data.type === 'chat'){
+                let messages = document.getElementById('messages')
+
+                messages.insertAdjacentHTML('beforeend', `<div class="message">
+                                        <p>${data.message}</p>
+                                    </div>`)
+            }
+        }
+
+        let form = document.getElementById('form')
+        function sendMessage(message) {
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+        }
+
+    </script>
+</body>
 <style>
-    h1 {
+    .message {
+        background-color: #f9f9f9;
+        padding: 10px;
+        margin: 10px;
+        border-radius: 5px;
+        max-height: 50vh;
+        overflow-y: auto;
+        align-self: center;
         text-align: center;
     }
+    .title {
+        text-align: center;
+    }   
 </style>
+</html>
