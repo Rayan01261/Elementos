@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+LOGIN_URL = '/cardgame/'
 # Application definition
 
 INSTALLED_APPS = [

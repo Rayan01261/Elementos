@@ -5,49 +5,113 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>Lobby</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-
 </head>
 <body>
     <h1 class="title">ELEMENTOS</h1>
+    <h2 class="title">{{ user.username }}</h2>
 
-    
     <div class="message">
         <div id="messages"></div>
     </div>
-    <form id="form">
-        <input type="button" value="1 De Fogo" onclick="sendMessage('1 De Fogo')"/>
-        <input type="button" value="2 de agua" onclick="sendMessage('2 de agua')"/>
-        <input type="button" value="3 de gelo" onclick="sendMessage('3 de gelo')"/>
-        <input type="button" value="666 de fogo" onclick="sendMessage('666 de fogo')"/>
-        <input type="button" value="3 de neve" onclick="sendMessage('3 de neve')"/>
-    </form>
+
+    <h2 class="hand">Sua Mão</h2>
+    <div id="hand" class="hand">
+        <!-- A mão será atualizada dinamicamente pelo JavaScript -->
+    </div>
+
+    <div class="hand">
+        <button onclick="end_game()">Desconectar</button>
+    </div>
+
     <script type="text/javascript">
         let url = `ws://${window.location.host}/ws/socket-server/`
 
         const chatSocket = new WebSocket(url)
 
-        chatSocket.onmessage = function(e){
-            let data = JSON.parse(e.data)
-            console.log('Data:', data)
+        chatSocket.onmessage = function(e) {
+            let data = JSON.parse(e.data);
+            console.log('Data:', data);
 
-            if(data.type === 'chat'){
-                let messages = document.getElementById('messages')
+            if (data.type === 'round_update') {
+                // Exibe as jogadas no chat
+                let messages = document.getElementById('messages');
+                let jogadasHTML = '';
+                let vencedorMensagem = '';
 
-                messages.insertAdjacentHTML('beforeend', `<div class="message">
-                                        <p>${data.message}</p>
-                                    </div>`)
+                // Para cada jogada, exibe o tipo e número da carta
+                data.jogadas.forEach(jogada => {
+                    jogadasHTML += `
+                        <p><strong>${jogada.nome}  jogou: ${jogada.jogada.numero} de ${jogada.jogada.tipo}</strong></p>
+                    `;
+                });
+
+                vencedorMensagem = `${data.vencedor} Venceu a rodada!`;
+
+                placarMenagem = `${data.jogadas[0].nome}: ${data.placar[data.jogadas[0].nome]}  ${data.jogadas[1].nome}: ${data.placar[data.jogadas[1].nome]}`;
+
+                messages.insertAdjacentHTML('beforeend', `
+                    <div><strong>Jogadas da rodada:</strong><br/>${jogadasHTML}
+                        ${vencedorMensagem}<br/>
+                        ${placarMenagem}
+                    </div>
+                `);
+            } else if (data.type === 'update_hand') {
+                // Atualiza a mão do jogador
+                let handContainer = document.getElementById('hand');
+                handContainer.innerHTML = ''; // Limpa a mão atual
+                
+                data.hand.forEach(card => {
+                    handContainer.insertAdjacentHTML('beforeend', `
+                        <button onclick="playCard(${card.id})">
+                            ${card.tipo} - ${card.numero}
+                        </button>
+                    `);
+                });
+            } else if (data.type === 'warning') {
+                alert(data.message); // Exibe o aviso como um alerta
+            } else if (data.type === 'start') {
+                // Exibe a mensagem quando o jogo começar
+                alert(data.message);
+            } else if (data.type === 'end_game') {
+                // Exibe a mensagem de encerramento de jogo
+                alert(data.message);
+                window.location.href = '/cardgame'; // Redireciona para outra página
+            } else if (data.type === 'chat_message') {
+                alert(data.message);
+                window.location.href = '/cardgame'; // Redireciona para outra página
             }
+        };
+
+        function playCard(cardId) {
+            chatSocket.send(JSON.stringify({
+                'message': `play_card:${cardId}`
+            }));
+            sendMessage('Jogador jogou uma carta');
         }
 
-        let form = document.getElementById('form')
         function sendMessage(message) {
             chatSocket.send(JSON.stringify({
                 'message': message
             }));
         }
 
+        function end_game() {
+            chatSocket.send(JSON.stringify({
+                'message': 'end_game'
+            }));
+
+            // Exibe uma mensagem de que o jogo foi encerrado
+            alert("O jogo foi encerrado!");
+
+            // Aqui você pode optar por esconder a interface ou redirecionar o jogador
+            document.getElementById('hand').innerHTML = '';  // Limpa a mão
+            document.getElementById('messages').innerHTML = ''; // Limpa o chat
+            // Redirecionar para outra página ou mostrar uma mensagem
+            window.location.href = '/cardgame'; // Exemplo de redirecionamento
+        }
     </script>
 </body>
+
 <style>
     .message {
         background-color: #f9f9f9;
@@ -59,8 +123,24 @@
         align-self: center;
         text-align: center;
     }
+
     .title {
         text-align: center;
-    }   
+    }
+
+    .hand {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .hand button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-left: 5px;
+        margin: 5px;
+    }
 </style>
 </html>

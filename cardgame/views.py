@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
-from .models import Jogador
+from django.contrib.auth.decorators import login_required
+from .models import Jogador, Baralho
+import random
 
 def index(request):
     jogadores = Jogador.objects.order_by('-vitorias')  # Ordem decrescente
@@ -36,5 +38,9 @@ def index(request):
 
     return render(request, "cardgame/index.html", context)
 
+@login_required
 def goToHub(request):
-    return render(request, "cardgame/hub.html")
+    baralho = Baralho.objects.get(jogador=request.user)
+    card_list = list(baralho.cartas.all())
+    random.shuffle(card_list)
+    return render(request, "cardgame/hub.html", {'card_list':card_list})
