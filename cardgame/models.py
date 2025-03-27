@@ -28,7 +28,11 @@ class Partida(models.Model):
     jogador2 = models.ForeignKey(
         Jogador, on_delete=models.CASCADE, related_name='partidas_como_jogador2'
     )
-    status = models.CharField(max_length=20, default='em andamento')
+    PARTIDA_STATUS= [
+        ('em andamento', 'Em andamento'),
+        ('finalizada', 'Finalizada')
+    ]
+    status = models.CharField(max_length=20, choices=PARTIDA_STATUS, default='em andamento')
 
 class Carta(models.Model):
     TIPO_CHOICES = [

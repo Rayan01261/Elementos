@@ -5,142 +5,171 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>Lobby</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap'>
 </head>
 <body>
-    <h1 class="title">ELEMENTOS</h1>
-    <h2 class="title">{{ user.username }}</h2>
+    <div class="container">
+        <h1 class="title">ELEMENTOS</h1>
+        <h2 class="subtitle">{{ user.username }}</h2>
 
-    <div class="message">
-        <div id="messages"></div>
-    </div>
+        <div class="message-box">
+            <div id="messages"></div>
+        </div>
 
-    <h2 class="hand">Sua Mão</h2>
-    <div id="hand" class="hand">
-        <!-- A mão será atualizada dinamicamente pelo JavaScript -->
-    </div>
+        <h2 class="hand-title">Sua Mão</h2>
+        <div id="hand" class="hand"></div>
 
-    <div class="hand">
-        <button onclick="end_game()">Desconectar</button>
+        <div class="button-container">
+            <button class="btn disconnect" onclick="end_game()">Desconectar</button>
+        </div>
     </div>
 
     <script type="text/javascript">
-        let url = `ws://${window.location.host}/ws/socket-server/`
-
-        const chatSocket = new WebSocket(url)
+        let url = `ws://${window.location.host}/ws/socket-server/`;
+        const chatSocket = new WebSocket(url);
 
         chatSocket.onmessage = function(e) {
             let data = JSON.parse(e.data);
             console.log('Data:', data);
 
             if (data.type === 'round_update') {
-                // Exibe as jogadas no chat
                 let messages = document.getElementById('messages');
                 let jogadasHTML = '';
-                let vencedorMensagem = '';
 
-                // Para cada jogada, exibe o tipo e número da carta
                 data.jogadas.forEach(jogada => {
-                    jogadasHTML += `
-                        <p><strong>${jogada.nome}  jogou: ${jogada.jogada.numero} de ${jogada.jogada.tipo}</strong></p>
-                    `;
+                    jogadasHTML += `<p><strong>${jogada.nome} jogou: ${jogada.jogada.numero} de ${jogada.jogada.tipo}</strong></p>`;
                 });
 
-                vencedorMensagem = `${data.vencedor} Venceu a rodada!`;
+                let vencedorMensagem = `<p class='winner'>${data.vencedor} venceu a rodada!</p>`;
+                let placarMensagem = `<p class='score'>${data.jogadas[0].nome}: ${data.placar[data.jogadas[0].nome]} | ${data.jogadas[1].nome}: ${data.placar[data.jogadas[1].nome]}</p>`;
 
-                placarMenagem = `${data.jogadas[0].nome}: ${data.placar[data.jogadas[0].nome]}  ${data.jogadas[1].nome}: ${data.placar[data.jogadas[1].nome]}`;
-
-                messages.insertAdjacentHTML('beforeend', `
-                    <div><strong>Jogadas da rodada:</strong><br/>${jogadasHTML}
-                        ${vencedorMensagem}<br/>
-                        ${placarMenagem}
-                    </div>
-                `);
+                messages.insertAdjacentHTML('beforeend', `<div class='round-info'>${jogadasHTML}${vencedorMensagem}${placarMensagem}</div>`);
             } else if (data.type === 'update_hand') {
-                // Atualiza a mão do jogador
                 let handContainer = document.getElementById('hand');
-                handContainer.innerHTML = ''; // Limpa a mão atual
-                
+                handContainer.innerHTML = '';
+
                 data.hand.forEach(card => {
                     handContainer.insertAdjacentHTML('beforeend', `
-                        <button onclick="playCard(${card.id})">
-                            ${card.tipo} - ${card.numero}
+                        <button class='card-btn' onclick="playCard(${card.id})">
+                            <span class='card-number'>${card.numero}</span>
+                            <span class='card-type'>${card.tipo}</span>
                         </button>
                     `);
                 });
             } else if (data.type === 'warning') {
-                alert(data.message); // Exibe o aviso como um alerta
+                alert(data.message);
             } else if (data.type === 'start') {
-                // Exibe a mensagem quando o jogo começar
                 alert(data.message);
-            } else if (data.type === 'end_game') {
-                // Exibe a mensagem de encerramento de jogo
+            } else if (data.type === 'end_game' || data.type === 'end_game_match_set' || data.type === 'chat_message') {
                 alert(data.message);
-                window.location.href = '/cardgame'; // Redireciona para outra página
-            } else if (data.type === 'chat_message') {
-                alert(data.message);
-                window.location.href = '/cardgame'; // Redireciona para outra página
+                window.location.href = '/cardgame';
             }
         };
 
         function playCard(cardId) {
-            chatSocket.send(JSON.stringify({
-                'message': `play_card:${cardId}`
-            }));
+            chatSocket.send(JSON.stringify({ 'message': `play_card:${cardId}` }));
             sendMessage('Jogador jogou uma carta');
         }
 
         function sendMessage(message) {
-            chatSocket.send(JSON.stringify({
-                'message': message
-            }));
+            chatSocket.send(JSON.stringify({ 'message': message }));
         }
 
         function end_game() {
-            chatSocket.send(JSON.stringify({
-                'message': 'end_game'
-            }));
-
-            // Exibe uma mensagem de que o jogo foi encerrado
-            alert("O jogo foi encerrado!");
-
-            // Aqui você pode optar por esconder a interface ou redirecionar o jogador
-            document.getElementById('hand').innerHTML = '';  // Limpa a mão
-            document.getElementById('messages').innerHTML = ''; // Limpa o chat
-            // Redirecionar para outra página ou mostrar uma mensagem
-            window.location.href = '/cardgame'; // Exemplo de redirecionamento
+            chatSocket.send(JSON.stringify({ 'type': 'end_game', 'message': 'end_game' }));
+            document.getElementById('hand').innerHTML = '';
+            document.getElementById('messages').innerHTML = '';
+            window.location.href = '/cardgame';
         }
     </script>
 </body>
 
 <style>
-    .message {
-        background-color: #f9f9f9;
-        padding: 10px;
-        margin: 10px;
-        border-radius: 5px;
-        max-height: 50vh;
-        overflow-y: auto;
-        align-self: center;
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f4f4f4;
         text-align: center;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
     }
 
     .title {
-        text-align: center;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .subtitle {
+        color: #16a085;
+        font-weight: 400;
+    }
+
+    .message-box {
+        background-color: #ecf0f1;
+        padding: 10px;
+        border-radius: 5px;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-bottom: 20px;
     }
 
     .hand {
         display: flex;
         justify-content: center;
-        align-items: center;
+        gap: 10px;
         flex-wrap: wrap;
     }
 
-    .hand button {
+    .card-btn {
+        width: 80px;
+        height: 120px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+        border: 2px solid #333;
+        font-size: 16px;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
-        padding-left: 5px;
-        margin: 5px;
+        cursor: pointer;
+        transition: transform 0.2s;
+        font-weight: bold;
+    }
+
+    .card-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .card-number {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .card-type {
+        font-size: 14px;
+        color: #555;
+    }
+
+    .btn.disconnect {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .btn.disconnect:hover {
+        background: #c0392b;
     }
 </style>
 </html>

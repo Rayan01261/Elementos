@@ -2,13 +2,17 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.core.cache import cache
 from asgiref.sync import sync_to_async
-from .models import Baralho, Carta, Jogador  # Modificado para usar Jogador
+from .models import Baralho, Carta, Jogador, Partida  # Modificado para usar Jogador
+from django.db.models import F
 import random
 
+room_number = 0
+partida_id = None
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.room_group_name = f"game_room"
-
+        global room_number
+        self.room_group_name = f"game_room{room_number}"
+        user_id = self.scope['user'].id
         player_count = cache.get('player_count', 0)
         if player_count >= 2:
             await self.close()
@@ -39,7 +43,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'message': 'O jogo começou!'
                 }
             )
+            print("Sala ",self.room_group_name)
+            room_number += 1
+            print(user_id)
+            print(player_ids)
+            if user_id == player_ids[1]:
+                partida = await sync_to_async(Partida.objects.create, thread_sensitive=True)(
+                    jogador1_id=player_ids[0], jogador2_id=player_ids[1]
+                )
+                print(f"Partida Criada com ID: {partida.id}")
+                global partida_id
+                partida_id = partida.id
 
+                
         try:
             jogador = await sync_to_async(Jogador.objects.get)(id=self.scope['user'].id)
             baralho_obj = await sync_to_async(Baralho.objects.get)(jogador=jogador)
@@ -60,6 +76,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     async def disconnect(self, close_code):
+        global partida_id
         user_id = self.scope['user'].id
 
         # Remove o jogador do grupo WebSocket
@@ -96,7 +113,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         'message': 'O outro jogador desconectou. O jogo foi encerrado!'
                     }
                 )
-
+                await sync_to_async(
+                    Partida.objects.filter(partida_id).update,
+                    thread_sensitive=True,
+                )(status="finalizada")
             await self.end_game()
 
 
@@ -163,7 +183,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
                         cache.delete(f"jogada_{jogador1_id}")
                         cache.delete(f"jogada_{jogador2_id}")
-
+                        vencedor_da_partida = self.check_game_winner(cache.get("score_1", 0), cache.get("score_2", 0), player_ids)
+                        if vencedor_da_partida is not None:
+                            await self.end_game_winner(vencedor_da_partida)
                 if baralho:
                     new_card = baralho.pop(0)
                     mao.append(new_card)
@@ -175,7 +197,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'type': 'update_hand',
                     'hand': [{'id': carta.id, 'tipo': carta.tipo, 'numero': carta.numero} for carta in mao]
                 }))
-        if message.startswith('A partida foi encerrada!'):
+        if message.startswith('end_game'):
+            print("recebendo mesnagem de fim de jogo")
             await self.end_game()
     async def update_round(self, event):
         vencedor = event['vencedor']
@@ -196,30 +219,95 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'message': message
         }))
 
-    async def end_game(self):
-        cache.set('player_count', 0)
+    async def end_game(self, event=None):
+        print("Recebendo solicitação para encerrar o jogo")
 
         player_ids = cache.get("player_ids", [])
+        user_id = self.scope['user'].id
+        print(player_ids)
+        
+
+        # Garantir que todos os dados de jogo sejam removidos do cache
         for player_id in player_ids:
             cache.delete(f"mao_{player_id}")
             cache.delete(f"baralho_{player_id}")
             cache.delete(f"jogada_{player_id}")
 
+        # Atualizar o status da partida no banco de dados
+        if len(player_ids) == 2:
+            
+            await sync_to_async(
+                lambda: Partida.objects.filter(id=partida_id).update(status="finalizada"),
+                thread_sensitive=True
+            )()
+
+        else:
+            print("Não há dois jogadores ativos para encerrar a partida corretamente.")
+
+        # Enviar mensagem para todos os jogadores informando o fim do jogo
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': 'A partida foi encerrada!'
+                'message': 'O jogo foi encerrado!'
             }
         )
 
-        cache.delete('player_ids')
-
+        # Remover todos os jogadores do grupo WebSocket
         for player_id in player_ids:
-            # Aqui você precisa garantir que está enviando a mensagem de desconexão para o canal certo
-            # Esse código pode precisar ser ajustado dependendo da sua implementação do "channel_name"
-            player_channel_name = self.channel_name  # Ajuste se necessário
-            await self.channel_layer.group_discard(self.room_group_name, player_channel_name)
+            await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+
+        print("Jogo encerrado com sucesso!")
+
+        cache.set('player_count', 0)  # Resetando contagem de jogadores
+        cache.delete("player_ids")  # Limpando os IDs dos jogadores
+    async def end_game_winner(self, player_id, event=None):
+        print("Recebendo solicitação para encerrar o jogo")
+        user_id = self.scope['user'].id
+        player_ids = cache.get("player_ids", [])
+
+
+        
+
+        # Garantir que todos os dados de jogo sejam removidos do cache
+        for player_id in player_ids:
+            cache.delete(f"mao_{player_id}")
+            cache.delete(f"baralho_{player_id}")
+            cache.delete(f"jogada_{player_id}")
+
+        # Atualizar o status da partida no banco de dados
+        if len(player_ids) == 2:
+            
+            await sync_to_async(
+                lambda: Partida.objects.filter(id=partida_id).update(status="finalizada"),
+                thread_sensitive=True
+            )()
+
+        else:
+            print("Não há dois jogadores ativos para encerrar a partida corretamente.")
+        if user_id == player_id:
+            await sync_to_async(Jogador.objects.filter(id=player_id).update, thread_sensitive=True)(vitorias=F('vitorias') + 1)
+        
+
+        # Enviar mensagem para todos os jogadores informando o vencedor e o fim do jogo
+        vencedor_nome = await self.get_username(player_id)
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+            'type': 'end_game_match_set',
+            'message': f'{vencedor_nome} venceu!'
+            }
+        )
+
+        # Remover todos os jogadores do grupo WebSocket
+        for player_id in player_ids:
+            await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+
+        print("Jogo encerrado com sucesso!")
+
+        cache.set('player_count', 0)  # Resetando contagem de jogadores
+        cache.delete("player_ids")  # Limpando os IDs dos jogadores
+
 
     async def get_username(self, user_id):
         jogador = await sync_to_async(Jogador.objects.get)(id=user_id)
@@ -255,3 +343,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return jogada2['nome']
         else:
             return 'Empate'
+    
+    def check_game_winner(self, score1, score2, player_ids):
+        if score1 == 3:
+            return player_ids[0]
+        elif score2 == 3:
+            return player_ids[1]
+        else:
+            return None
+    async def end_game_match_set(self, event):
+        message = event['message']
+
+        # Envia a mensagem para o cliente WebSocket
+        await self.send(text_data=json.dumps({
+            'type': 'end_game_match_set',
+            'message': message
+        }))
