@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-&+ms&4pvcb@#ujs5+(o4&yty(@*4*(=^ovpj6s2%#j6%3mxj91
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 LOGIN_URL = '/cardgame/'
 # Application definition

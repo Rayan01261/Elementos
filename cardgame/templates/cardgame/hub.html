@@ -19,6 +19,8 @@
         <h2 class="hand-title">Sua Mão</h2>
         <div id="hand" class="hand"></div>
 
+        <div id="waiting-message" class="waiting-message" style="display: none;">Esperando o oponente...</div>
+
         <div class="button-container">
             <button class="btn disconnect" onclick="end_game()">Desconectar</button>
         </div>
@@ -27,12 +29,16 @@
     <script type="text/javascript">
         let url = `ws://${window.location.host}/ws/socket-server/`;
         const chatSocket = new WebSocket(url);
+        let waitingForOpponent = false;
 
         chatSocket.onmessage = function(e) {
             let data = JSON.parse(e.data);
             console.log('Data:', data);
 
             if (data.type === 'round_update') {
+                document.getElementById('waiting-message').style.display = 'none';
+                waitingForOpponent = false;
+                
                 let messages = document.getElementById('messages');
                 let jogadasHTML = '';
 
@@ -67,6 +73,10 @@
         };
 
         function playCard(cardId) {
+            if (!waitingForOpponent) {
+                waitingForOpponent = true;
+                document.getElementById('waiting-message').style.display = 'block';
+            }
             chatSocket.send(JSON.stringify({ 'message': `play_card:${cardId}` }));
             sendMessage('Jogador jogou uma carta');
         }
@@ -148,14 +158,11 @@
         transform: scale(1.1);
     }
 
-    .card-number {
-        font-size: 20px;
+    .waiting-message {
+        margin-top: 10px;
+        font-size: 16px;
+        color: #e74c3c;
         font-weight: bold;
-    }
-
-    .card-type {
-        font-size: 14px;
-        color: #555;
     }
 
     .btn.disconnect {
