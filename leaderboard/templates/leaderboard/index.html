@@ -1,0 +1,70 @@
+{% if jogadores %}
+    <div class="container">
+        <h1 class="title">LeaderBoard</h1>
+        <div class="jogadores-lista">
+            {% for jogador in jogadores %}
+                <div class="jogador-card">
+                    <h2 class="jogador-nome">{{ jogador.username }}</h2>
+                    <p class="jogador-vitorias">Vitórias: {{ jogador.vitorias }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    <div class="container">
+        <p class="nenhum-jogador">Nenhum jogador encontrado.</p>
+    </div>
+{% endif %}
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f4f4f4;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .title {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .jogadores-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .jogador-card {
+        background: #ecf0f1;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .jogador-nome {
+        color: #16a085;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .jogador-vitorias {
+        color: #2c3e50;
+        margin: 5px 0 0;
+    }
+
+    .nenhum-jogador {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+</style>

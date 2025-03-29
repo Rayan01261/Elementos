@@ -33,6 +33,7 @@ LOGIN_URL = '/cardgame/'
 INSTALLED_APPS = [
     'daphne',
     'cardgame.apps.CardgameConfig',
+    'leaderboard.apps.LeaderboardConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

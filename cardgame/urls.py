@@ -5,5 +5,6 @@ app_name = 'cardgame'
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("hub/", views.goToHub, name="goToHub")
+    path("game/", views.goTogame, name="goTogame"),
+    path("hub/", views.goToHub, name="goToHub"),
 ]

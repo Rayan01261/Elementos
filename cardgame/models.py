@@ -32,6 +32,8 @@ class Partida(models.Model):
         ('em andamento', 'Em andamento'),
         ('finalizada', 'Finalizada')
     ]
+    vencedor = models.ForeignKey(
+        Jogador, on_delete=models.CASCADE, null=True, blank=True, related_name='partidas_vencidas')
     status = models.CharField(max_length=20, choices=PARTIDA_STATUS, default='em andamento')
 
 class Carta(models.Model):

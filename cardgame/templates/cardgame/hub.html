@@ -1,98 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset='utf-8'>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Lobby</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap'>
-</head>
-<body>
-    <div class="container">
-        <h1 class="title">ELEMENTOS</h1>
-        <h2 class="subtitle">{{ user.username }}</h2>
-
-        <div class="message-box">
-            <div id="messages"></div>
-        </div>
-
-        <h2 class="hand-title">Sua Mão</h2>
-        <div id="hand" class="hand"></div>
-
-        <div id="waiting-message" class="waiting-message" style="display: none;">Esperando o oponente...</div>
-
-        <div class="button-container">
-            <button class="btn disconnect" onclick="end_game()">Desconectar</button>
-        </div>
+<div class="container">
+    <h1 class="title">Bem-vindo, {{ user.username }}</h1>
+    
+    <div class="button-container">
+        <a href="{% url 'leaderboard:leaderboard' %}">
+            <button class="btn">Ver Leaderboard</button>
+        </a>
+        <a href="">
+            <button class="btn secondary">Ver meu histórico de partidas</button>
+        </a>
+        <a href="{% url 'cardgame:goTogame' %}">
+            <button class="btn primary">JOGAR</button>
+        </a>
     </div>
-
-    <script type="text/javascript">
-        let url = `ws://${window.location.host}/ws/socket-server/`;
-        const chatSocket = new WebSocket(url);
-        let waitingForOpponent = false;
-
-        chatSocket.onmessage = function(e) {
-            let data = JSON.parse(e.data);
-            console.log('Data:', data);
-
-            if (data.type === 'round_update') {
-                document.getElementById('waiting-message').style.display = 'none';
-                waitingForOpponent = false;
-                
-                let messages = document.getElementById('messages');
-                let jogadasHTML = '';
-
-                data.jogadas.forEach(jogada => {
-                    jogadasHTML += `<p><strong>${jogada.nome} jogou: ${jogada.jogada.numero} de ${jogada.jogada.tipo}</strong></p>`;
-                });
-
-                let vencedorMensagem = `<p class='winner'>${data.vencedor} venceu a rodada!</p>`;
-                let placarMensagem = `<p class='score'>${data.jogadas[0].nome}: ${data.placar[data.jogadas[0].nome]} | ${data.jogadas[1].nome}: ${data.placar[data.jogadas[1].nome]}</p>`;
-
-                messages.insertAdjacentHTML('beforeend', `<div class='round-info'>${jogadasHTML}${vencedorMensagem}${placarMensagem}</div>`);
-            } else if (data.type === 'update_hand') {
-                let handContainer = document.getElementById('hand');
-                handContainer.innerHTML = '';
-
-                data.hand.forEach(card => {
-                    handContainer.insertAdjacentHTML('beforeend', `
-                        <button class='card-btn' onclick="playCard(${card.id})">
-                            <span class='card-number'>${card.numero}</span>
-                            <span class='card-type'>${card.tipo}</span>
-                        </button>
-                    `);
-                });
-            } else if (data.type === 'warning') {
-                alert(data.message);
-            } else if (data.type === 'start') {
-                alert(data.message);
-            } else if (data.type === 'end_game' || data.type === 'end_game_match_set' || data.type === 'chat_message') {
-                alert(data.message);
-                window.location.href = '/cardgame';
-            }
-        };
-
-        function playCard(cardId) {
-            if (!waitingForOpponent) {
-                waitingForOpponent = true;
-                document.getElementById('waiting-message').style.display = 'block';
-            }
-            chatSocket.send(JSON.stringify({ 'message': `play_card:${cardId}` }));
-            sendMessage('Jogador jogou uma carta');
-        }
-
-        function sendMessage(message) {
-            chatSocket.send(JSON.stringify({ 'message': message }));
-        }
-
-        function end_game() {
-            chatSocket.send(JSON.stringify({ 'type': 'end_game', 'message': 'end_game' }));
-            document.getElementById('hand').innerHTML = '';
-            document.getElementById('messages').innerHTML = '';
-            window.location.href = '/cardgame';
-        }
-    </script>
-</body>
+</div>
 
 <style>
     body {
@@ -103,7 +23,7 @@
     }
 
     .container {
-        max-width: 600px;
+        max-width: 400px;
         margin: auto;
         background: white;
         padding: 20px;
@@ -114,69 +34,44 @@
     .title {
         color: #2c3e50;
         font-weight: 600;
-    }
-
-    .subtitle {
-        color: #16a085;
-        font-weight: 400;
-    }
-
-    .message-box {
-        background-color: #ecf0f1;
-        padding: 10px;
-        border-radius: 5px;
-        max-height: 200px;
-        overflow-y: auto;
         margin-bottom: 20px;
     }
 
-    .hand {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .card-btn {
-        width: 80px;
-        height: 120px;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
-        border: 2px solid #333;
-        font-size: 16px;
+    .button-container {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        gap: 10px;
         align-items: center;
-        cursor: pointer;
-        transition: transform 0.2s;
-        font-weight: bold;
     }
 
-    .card-btn:hover {
-        transform: scale(1.1);
-    }
-
-    .waiting-message {
-        margin-top: 10px;
-        font-size: 16px;
-        color: #e74c3c;
-        font-weight: bold;
-    }
-
-    .btn.disconnect {
-        background: #e74c3c;
+    .btn {
+        background: #16a085;
         color: white;
         border: none;
         padding: 10px 15px;
         border-radius: 5px;
         cursor: pointer;
         transition: 0.3s;
+        width: 100%;
     }
 
-    .btn.disconnect:hover {
+    .btn:hover {
+        background: #12876f;
+    }
+
+    .btn.primary {
+        background: #e74c3c;
+    }
+
+    .btn.primary:hover {
         background: #c0392b;
     }
+
+    .btn.secondary {
+        background: #3498db;
+    }
+
+    .btn.secondary:hover {
+        background: #2980b9;
+    }
 </style>
-</html>

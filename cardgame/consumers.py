@@ -121,11 +121,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         'message': 'O outro jogador desconectou. O jogo foi encerrado!'
                     }
                 )
-                if hasattr(self, 'partida_id'):
-                    await sync_to_async(
-                        Partida.objects.filter(id=self.partida_id).update,
-                        thread_sensitive=True,
-                    )(status="finalizada")
+                if self.partida_id:
+                    await sync_to_async(Partida.objects.filter(id=self.partida_id).update)(
+                        status="finalizada"
+                    )
+
             await self.end_game()
 
 
@@ -287,7 +287,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Atualizar o status da partida no banco de dados
 
         await sync_to_async(
-            lambda: Partida.objects.filter(id=partida_id).update(status="finalizada"),
+            lambda: Partida.objects.filter(id=self.partida_id).update(status="finalizada"),
             thread_sensitive=True
         )()
 

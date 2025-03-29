@@ -39,8 +39,12 @@ def index(request):
     return render(request, "cardgame/index.html", context)
 
 @login_required
-def goToHub(request):
+def goTogame(request):
     baralho = Baralho.objects.get(jogador=request.user)
     card_list = list(baralho.cartas.all())
     random.shuffle(card_list)
-    return render(request, "cardgame/hub.html", {'card_list':card_list})
+    return render(request, "cardgame/game.html", {'card_list':card_list})
+
+@login_required
+def goToHub(request):
+    return render(request, "cardgame/hub.html")
