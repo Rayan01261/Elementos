@@ -1,7 +1,80 @@
-{% for partida in partidas}
-    <div class="card">
-        <h2>Partida {{ forloop.counter }}</h2>
-        <h2>Jogadores {{partida.Jogador1}} VS {{ partida.Jogador2}}</h2>
-        <p>Vencedor: {{ partida.vencedor }}</p>
+<div class="container">
+    <h1 class="title">Historico de Partidas</h1>
+    <button class="back-btn" onclick="window.history.back()">Voltar</button>
+    <div class="auth-box">
+        {% for partida in partidas %}
+            <div class="partida-card">
+                <h2 class="auth-title">Partida {{ forloop.counter }}</h2>
+                <p class="partida-info">Jogadores: <strong>{{ partida.jogador1 }}</strong> VS <strong>{{ partida.jogador2 }}</strong></p>
+                <p class="partida-info">Vencedor: <strong>{{ partida.vencedor }}</strong></p>
+            </div>
+        {% empty %}
+            <p class="error-message">Nenhuma partida disponível</p>
+        {% endfor %}
     </div>
-{% endfor %}
+    
+</div>
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f4f4f4;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 400px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .title {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .auth-box {
+        margin-top: 20px;
+    }
+
+    .auth-title {
+        color: #16a085;
+        font-weight: 500;
+    }
+
+    .error-message {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+
+    .partida-card {
+        background: #ecf0f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .partida-info {
+        color: #34495e;
+    }
+
+    .back-btn {
+        margin-top: 15px;
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .back-btn:hover {
+        background: #2980b9;
+    }
+</style>

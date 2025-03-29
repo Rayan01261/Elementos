@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'daphne',
     'cardgame.apps.CardgameConfig',
     'leaderboard.apps.LeaderboardConfig',
+    'history.apps.HistoryConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

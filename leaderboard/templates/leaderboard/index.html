@@ -1,6 +1,7 @@
 {% if jogadores %}
     <div class="container">
         <h1 class="title">LeaderBoard</h1>
+        <button class="back-btn" onclick="window.history.back()">Voltar</button>
         <div class="jogadores-lista">
             {% for jogador in jogadores %}
                 <div class="jogador-card">
@@ -66,5 +67,15 @@
     .nenhum-jogador {
         color: #e74c3c;
         font-weight: bold;
+    }
+    .back-btn {
+        margin-top: 20px;
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
     }
 </style>

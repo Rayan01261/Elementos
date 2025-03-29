@@ -21,5 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("cardgame/", include("cardgame.urls")),
     path('leaderboard/', include("leaderboard.urls")),
-
+    path('history/', include("history.urls")    ),
 ]

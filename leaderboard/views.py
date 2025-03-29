@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from cardgame.models import Jogador
+from .models import Jogador
 # Create your views here.
 def index(request):
     jogadores = Jogador.objects.order_by('-vitorias')  # Ordem decrescente

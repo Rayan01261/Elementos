@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from models import Partida
+from .models import Partida
 # Create your views here.
 
 def index(request):
