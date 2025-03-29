@@ -27,6 +27,9 @@
     </div>
 
     <script type="text/javascript">
+        if (performance.navigation.type === performance.navigation.TYPE_RELOAD){
+            window.location.href = "/cardgame/hub/";
+        };
         let url = `ws://${window.location.host}/ws/socket-server/`;
         const chatSocket = new WebSocket(url);
         let waitingForOpponent = false;

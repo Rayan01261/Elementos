@@ -5,6 +5,7 @@ from asgiref.sync import sync_to_async
 from .models import Baralho, Carta, Jogador, Partida  # Modificado para usar Jogador
 from django.db.models import F
 import random
+import asyncio
 
 room_number = 0
 partida_id = None
@@ -13,9 +14,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         # Obtém o ID do usuário
         user_id = self.scope['user'].id
-
+        
         # Verifica o número de jogadores na sala atual
         global room_number
+        
         player_count = cache.get(f'player_count_{room_number}', 0)
         if player_count >= 2:
             # Incrementa o número da sala e cria uma nova sala
@@ -62,7 +64,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     jogador1_id=player_ids[0], jogador2_id=player_ids[1]
                 )
                 print(f"Partida Criada com ID: {partida.id}")
-                self.partida_id = partida.id  # Armazena o ID da partida como variável de instância
+                cache.set(f"partida_id_{self.room_number}", partida.id)
+
+            await asyncio.sleep(0.1)
+            
+            self.partida_id = cache.get(f"partida_id_{self.room_number}")
 
                 
         try:
@@ -113,6 +119,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Se restar apenas 1 jogador, encerrar o jogo
         if player_count == 1:
             other_player_id = player_ids[0] if player_ids else None
+            
             if other_player_id:
                 await self.channel_layer.group_send(
                     self.room_group_name,
@@ -274,7 +281,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         print("Recebendo solicitação para encerrar o jogo")
         user_id = self.scope['user'].id
         player_ids = cache.get("player_ids", [])
-
+        
 
         
 
@@ -287,7 +294,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Atualizar o status da partida no banco de dados
 
         await sync_to_async(
-            lambda: Partida.objects.filter(id=self.partida_id).update(status="finalizada"),
+            lambda: Partida.objects.filter(id=self.partida_id).update(status="finalizada",vencedor_id=player_id),
             thread_sensitive=True
         )()
 
