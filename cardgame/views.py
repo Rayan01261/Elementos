@@ -5,7 +5,6 @@ from django.contrib.auth.decorators import login_required
 from .models import Jogador, Baralho
 import random
 
-
 def index(request):
     jogadores = Jogador.objects.order_by('-vitorias')  # Ordem decrescente
     register_toggle = False  # Default to Login
